@@ -3,8 +3,7 @@ package pl.com.bottega.ecommerce.sales.domain.invoicing;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,6 +50,24 @@ class BookKeeperTest {
         Tax tax = new Tax(new Money(1), "taxes");
         when(taxPolicyMock.calculateTax(ProductType.FOOD, new Money(100))).thenReturn(tax);
         assertEquals(bookKeeper.issuance(invoiceRequest, taxPolicyMock).getItems().size(),1);
+     }
+
+     @Test
+     void testTwoCalculateTaxCalls() {
+         InvoiceRequest invoiceRequest = new InvoiceRequest(dummy);
+
+         ProductData productData1 = new ProductData(Id.generate(), new Money(100), "sampleName", ProductType.FOOD, new Date());
+         ProductData productData2 = new ProductData(Id.generate(), new Money(100), "sampleName", ProductType.FOOD, new Date());
+
+         RequestItem stub1 = new RequestItem(productData1, 1, new Money(100));
+         RequestItem stub2 = new RequestItem(productData2, 1, new Money(100));
+         invoiceRequest.add(stub1);
+         invoiceRequest.add(stub2);
+         Tax tax = new Tax(new Money(1), "taxes");
+         when(taxPolicyMock.calculateTax(ProductType.FOOD, new Money(100))).thenReturn(tax);
+        bookKeeper.issuance(invoiceRequest, taxPolicyMock);
+        verify(taxPolicyMock, times(2)).calculateTax(ProductType.FOOD, new Money(100));
+
      }
 
 }
