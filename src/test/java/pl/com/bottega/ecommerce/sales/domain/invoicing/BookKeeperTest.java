@@ -24,9 +24,16 @@ class BookKeeperTest {
 
     private BookKeeper bookKeeper;
     private InvoiceFactory invoiceFactory;
-    ClientData dummy;
-
-
+    private ClientData dummyClient;
+    private InvoiceRequest invoiceRequest;
+    private ProductData product;
+    private Money productPrice;
+    private Date sampleDate;
+    private RequestItem sampleItem;
+    private int quantity = 1;
+    private Id sampleId;
+    private Money taxValue;
+    private ProductType productType = ProductType.FOOD;
     @Mock
     private TaxPolicy taxPolicyMock;
 
@@ -35,51 +42,46 @@ class BookKeeperTest {
     void setUp() throws Exception {
         invoiceFactory = new InvoiceFactory();
         bookKeeper = new BookKeeper(invoiceFactory);
-        Id sampleId = Id.generate();
-        dummy = new ClientData(sampleId, "Name");
+        sampleId = Id.generate();
+        dummyClient = new ClientData(sampleId, "Name");
+        invoiceRequest = new InvoiceRequest(dummyClient);
+        productPrice = new Money(500);
+        sampleDate = new Date();
+        taxValue = new Money(1);
+        product = new ProductData(sampleId, productPrice, "sampleName", productType, sampleDate);
+        sampleItem = new RequestItem(product, quantity, productPrice);
 
     }
 
     @Test
     void testSingleItemInvoiceRequest() {
 
-        InvoiceRequest invoiceRequest = new InvoiceRequest(dummy);
-        ProductData productData = new ProductData(Id.generate(), new Money(100), "sampleName", ProductType.FOOD, new Date());
-        RequestItem stub = new RequestItem(productData, 1, new Money(100));
-        invoiceRequest.add(stub);
-        Tax tax = new Tax(new Money(1), "taxes");
-        when(taxPolicyMock.calculateTax(ProductType.FOOD, new Money(100))).thenReturn(tax);
+        invoiceRequest.add(sampleItem);
+        Tax tax = new Tax(taxValue, "taxes");
+        when(taxPolicyMock.calculateTax(productType, productPrice)).thenReturn(tax);
         assertEquals(bookKeeper.issuance(invoiceRequest, taxPolicyMock).getItems().size(),1);
      }
 
      @Test
      void testTwoCalculateTaxCalls() {
-         InvoiceRequest invoiceRequest = new InvoiceRequest(dummy);
 
-         ProductData productData1 = new ProductData(Id.generate(), new Money(100), "sampleName", ProductType.FOOD, new Date());
-         ProductData productData2 = new ProductData(Id.generate(), new Money(100), "sampleName", ProductType.FOOD, new Date());
-
-         RequestItem stub1 = new RequestItem(productData1, 1, new Money(100));
-         RequestItem stub2 = new RequestItem(productData2, 1, new Money(100));
-         invoiceRequest.add(stub1);
-         invoiceRequest.add(stub2);
-         Tax tax = new Tax(new Money(1), "taxes");
-         when(taxPolicyMock.calculateTax(ProductType.FOOD, new Money(100))).thenReturn(tax);
+        invoiceRequest.add(sampleItem);
+        invoiceRequest.add(sampleItem);
+        Tax tax = new Tax(taxValue, "taxes");
+        when(taxPolicyMock.calculateTax(productType, productPrice)).thenReturn(tax);
         bookKeeper.issuance(invoiceRequest, taxPolicyMock);
-        verify(taxPolicyMock, times(2)).calculateTax(ProductType.FOOD, new Money(100));
-
+        verify(taxPolicyMock, times(2)).calculateTax(productType, productPrice);
     }
 
      @Test
      void emptyInvoiceIssuanceTest() {
-         InvoiceRequest invoiceRequest = new InvoiceRequest(dummy);
-         assertEquals(bookKeeper.issuance(invoiceRequest, taxPolicyMock).getItems().size(), 0);
 
+         assertEquals(bookKeeper.issuance(invoiceRequest, taxPolicyMock).getItems().size(), 0);
      }
 
      @Test
     void emptyInvoiceCalculateTaxTest() {
-         InvoiceRequest invoiceRequest = new InvoiceRequest(dummy);
+
          bookKeeper.issuance(invoiceRequest, taxPolicyMock);
          verifyNoInteractions(taxPolicyMock);
      }
@@ -87,33 +89,23 @@ class BookKeeperTest {
      @Test
     void twoItemsInvoiceTest() {
 
-         InvoiceRequest invoiceRequest = new InvoiceRequest(dummy);
-         ProductData productData = new ProductData(Id.generate(), new Money(100), "sampleName", ProductType.FOOD, new Date());
-         RequestItem stub = new RequestItem(productData, 100, new Money(100));
-         invoiceRequest.add(stub);
-         invoiceRequest.add(stub);
-         Tax tax = new Tax(new Money(1), "taxes");
-         when(taxPolicyMock.calculateTax(ProductType.FOOD, new Money(100))).thenReturn(tax);
+         invoiceRequest.add(sampleItem);
+         invoiceRequest.add(sampleItem);
+         Tax tax = new Tax(taxValue, "taxes");
+         when(taxPolicyMock.calculateTax(productType, productPrice)).thenReturn(tax);
 
          assertEquals(bookKeeper.issuance(invoiceRequest, taxPolicyMock).getItems().size(),2);
-
      }
 
      @Test
     void threeCalculateTaxCallsTest() {
-         InvoiceRequest invoiceRequest = new InvoiceRequest(dummy);
 
-         ProductData productData1 = new ProductData(Id.generate(), new Money(100), "sampleName", ProductType.FOOD, new Date());
-         ProductData productData2 = new ProductData(Id.generate(), new Money(100), "sampleName", ProductType.FOOD, new Date());
-
-         RequestItem stub1 = new RequestItem(productData1, 1, new Money(100));
-         RequestItem stub2 = new RequestItem(productData2, 1, new Money(100));
-         invoiceRequest.add(stub1);
-         invoiceRequest.add(stub2);
-         invoiceRequest.add(stub1);
-         Tax tax = new Tax(new Money(1), "taxes");
-         when(taxPolicyMock.calculateTax(ProductType.FOOD, new Money(100))).thenReturn(tax);
+         invoiceRequest.add(sampleItem);
+         invoiceRequest.add(sampleItem);
+         invoiceRequest.add(sampleItem);
+         Tax tax = new Tax(taxValue, "taxes");
+         when(taxPolicyMock.calculateTax(productType, productPrice)).thenReturn(tax);
          bookKeeper.issuance(invoiceRequest, taxPolicyMock);
-         verify(taxPolicyMock, times(3)).calculateTax(ProductType.FOOD, new Money(100));
+         verify(taxPolicyMock, times(3)).calculateTax(productType, productPrice);
      }
 }
