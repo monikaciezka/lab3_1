@@ -37,7 +37,7 @@ class BookKeeperTest {
     @Mock
     private TaxPolicy taxPolicyMock;
 
-
+    
     @BeforeEach
     void setUp() throws Exception {
         invoiceFactory = new InvoiceFactory();
@@ -48,14 +48,14 @@ class BookKeeperTest {
         productPrice = new Money(500);
         sampleDate = new Date();
         taxValue = new Money(1);
-        product = new ProductData(sampleId, productPrice, "sampleName", productType, sampleDate);
+        product = mock(ProductData.class);
         sampleItem = new RequestItem(product, quantity, productPrice);
 
     }
 
     @Test
     void testSingleItemInvoiceRequest() {
-
+        when(product.getType()).thenReturn(productType);
         invoiceRequest.add(sampleItem);
         Tax tax = new Tax(taxValue, "taxes");
         when(taxPolicyMock.calculateTax(productType, productPrice)).thenReturn(tax);
@@ -64,7 +64,7 @@ class BookKeeperTest {
 
      @Test
      void testTwoCalculateTaxCalls() {
-
+        when(product.getType()).thenReturn(productType);
         invoiceRequest.add(sampleItem);
         invoiceRequest.add(sampleItem);
         Tax tax = new Tax(taxValue, "taxes");
@@ -88,7 +88,7 @@ class BookKeeperTest {
 
      @Test
     void twoItemsInvoiceTest() {
-
+         when(product.getType()).thenReturn(productType);
          invoiceRequest.add(sampleItem);
          invoiceRequest.add(sampleItem);
          Tax tax = new Tax(taxValue, "taxes");
@@ -99,7 +99,7 @@ class BookKeeperTest {
 
      @Test
     void threeCalculateTaxCallsTest() {
-
+         when(product.getType()).thenReturn(productType);
          invoiceRequest.add(sampleItem);
          invoiceRequest.add(sampleItem);
          invoiceRequest.add(sampleItem);
